@@ -15,7 +15,8 @@ library(dlnm)
 library(eesim)
 set.seed(8)
 
-expo <- sim_exposure(n=1000, central = .01, amp = .01, exposure_type = "binary")
+expo <- sim_exposure(n=1000, central = .01, amp = .01,
+                     exposure_type = "binary")
 
 base <- create_baseline(1000, 58, trend="no trend")
 ```
@@ -25,7 +26,10 @@ Custom lambda function for lag:
 ```{r}
 stratalambda
 
-strat <- stratalambda(exposure=expo$x, baseline=base$baseline, rrvalues = c(.2, .05, .01), lag = 6, argvar = list(fun = "lin"), arglag = list(fun="strata", breaks = c(0,1,3)))
+strat <- stratalambda(exposure=expo$x, baseline=base$baseline,
+                      rrvalues = c(.2, .05, .01), lag = 6,
+                      argvar = list(fun = "lin"),
+                      arglag = list(fun="strata", breaks = c(0,1,3)))
 ```
 
 This returns a vector of lambda values.  
@@ -33,7 +37,15 @@ This returns a vector of lambda values.
 Using in sim_outcome:
 
 ```{r}
-out <- sim_outcome(exposure = expo, average_outcome = 58, trend = "no trend", cust_lambda_func = stratalambda, cust_lambda_args = list(exposure = expo$x, baseline = base, rrvalues = c(.7, .5, .3), lag=15, argvar = list(fun = "lin"), arglag = list(fun="strata", breaks = c(0,4,9))))
+out <- sim_outcome(exposure = expo, average_outcome = 58,
+                   trend = "no trend", cust_lambda_func = stratalambda,
+                   cust_lambda_args = list(exposure = expo$x,
+                                           baseline = base,
+                                           rrvalues = c(.7, .5, .3),
+                                           lag=15,
+                                           argvar = list(fun = "lin"),
+                                           arglag = list(fun="strata",
+                                                         breaks = c(0,4,9))))
 out[1:50,]
 plot(out$outcome)
 which(expo$x==1)
@@ -47,7 +59,8 @@ smoothrr
 
 #Example:
 set.seed(15)
-testexpo <- sim_exposure(n=200, central = .01, amp = .01, exposure_type = "binary")
+testexpo <- sim_exposure(n=200, central = .01, amp = .01,
+                         exposure_type = "binary")
 testrr <- smoothrr(testexpo$x, lag = 20, scale = 6)
 plot(testrr)
 ```
@@ -64,10 +77,15 @@ base <- create_baseline(200, 58, trend = "no trend")
 #Lambda function:
 smoothlambda 
 
-smoothlambda(exposure=testexpo$x, baseline = base$baseline, lag = 20, scale = 2)
+smoothlambda(exposure=testexpo$x, baseline = base$baseline, lag = 20,
+             scale = 2)
 
 #Example in sim_outcome:
-out <- sim_outcome(testexpo, average_outcome = 58, trend = "no trend", cust_lambda_func = smoothlambda, cust_lambda_args = list(testexpo$x, baseline = base$baseline, lag = 20, scale = 2))
+out <- sim_outcome(testexpo, average_outcome = 58,
+                   trend = "no trend", cust_lambda_func = smoothlambda,
+                   cust_lambda_args = list(testexpo$x,
+                                           baseline = base$baseline,
+                                           lag = 20, scale = 2))
 plot(out$outcome)
 which(testexpo$x==1)
 ```
