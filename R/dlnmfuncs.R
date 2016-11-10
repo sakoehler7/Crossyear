@@ -3,6 +3,8 @@
 #' This is a custom lambda function to enter into eesim.  It creates lambda 
 #' values based on stratified relative risks.  
 #' 
+#' 
+#' 
 #' @export
 #' 
 stratalambda <- function(exposure, baseline, rrvalues, lag, argvar, arglag){
