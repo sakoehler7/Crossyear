@@ -15,7 +15,7 @@ library(dlnm)
 library(eesim)
 set.seed(8)
 
-expo <- sim_exposure(n=1000, central = .01, amp = .01,
+expo <- sim_exposure(n = 1000, central = .01, amp = .01,
                      exposure_type = "binary")
 
 base <- create_baseline(1000, 58, trend="no trend")
@@ -24,9 +24,11 @@ base <- create_baseline(1000, 58, trend="no trend")
 Custom lambda function for lag:
 
 ```{r}
+source("../R/dlnmfuncs.R")
 stratalambda
-
-strat <- stratalambda(exposure=expo$x, baseline=base$baseline,
+```
+```{r}
+strat <- stratalambda(exposure = expo$x, baseline = base$baseline,
                       rrvalues = c(.2, .05, .01), lag = 6,
                       argvar = list(fun = "lin"),
                       arglag = list(fun="strata", breaks = c(0,1,3)))
