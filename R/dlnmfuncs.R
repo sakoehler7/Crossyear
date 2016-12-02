@@ -37,21 +37,27 @@ stratalambda <- function(exposure, baseline, rrvalues, lag, argvar, arglag){
 #' lambda function for eesim.
 #' 
 #' @examples 
-#' set.seed(15)
-#' testexpo <- sim_exposure(n=200, central = .01, amp = .01, exposure_type = "binary")
+#' testexpo <- sim_exposure(n=200, central = .01, amp = .01, 
+#'             exposure_type = "binary")
 #' testrr <- smoothrr(testexpo$x, lag = 20, scale = 6)
+#' overlap <- rep(0,200)
+#' overlap[c(50, 60, 144)] <-1
 #' 
 #' @export
 #' 
-smoothrr <- function(exposure, lag, scale){
+smoothrr <- function(exposure, lag, scale=6){
+  #scale of 6 results in max rr of 1.18, independent of other arguments.
+  #Add lag amount of burn time at beginning of exposure
+  newexp <- c(rep(0, lag), exposure)
   #Create a vector that has a 1 on each day there was increased rr:
-  lagtime <- dlnm::crossbasis(x=exposure, lag = lag, argvar = list(fun = "thr", thr.value = 0))[,]
+  lagtime <- dlnm::crossbasis(x=exposure, lag = lag, argvar = list(fun = "thr", 
+                              thr.value = 0))[,]
   rrseq <- rep(0, length(lagtime))
   for (i in 1:length(lagtime)){
     if(is.na(lagtime[i])){
       rrseq[i] <- 0
     }
-  else if (lagtime[i]==1 & lagtime[i-1]==0){
+  else if (lagtime[i]==1 & (lagtime[i-1]==0 | is.na(lagtime[i-1]))){
     rrseq[i:(i+lag-1)] = abs(-lag:-1)
   }
   else if (lagtime[i]==0){
@@ -60,7 +66,7 @@ smoothrr <- function(exposure, lag, scale){
 }
 polylag <- dlnm:::poly(rrseq)/scale
 rr <- exp(polylag)
-return(rr)
+return(polylag)
 }
 #' 
 #' Smooth lambda
