@@ -66,7 +66,7 @@ smoothrr <- function(exposure, lag, scale=6){
 }
 polylag <- dlnm:::poly(rrseq)/scale
 rr <- exp(polylag)
-return(polylag)
+return(rr)
 }
 #' 
 #' Smooth lambda
