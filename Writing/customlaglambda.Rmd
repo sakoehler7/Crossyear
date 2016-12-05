@@ -5,6 +5,11 @@ date: "October 14, 2016"
 output: pdf_document
 ---
 
+```{r}
+library(dplyr)
+```
+
+
 #Piecewise relative risks
 
 Making some binary exposure values and a baseline:
@@ -14,29 +19,45 @@ Making some binary exposure values and a baseline:
 library(dlnm)
 library(eesim)
 set.seed(8)
-
-expo <- sim_exposure(n = 1000, central = .01, amp = .01,
-                     exposure_type = "binary")
-
-base <- create_baseline(1000, 58, trend="no trend")
 ```
 
-Custom lambda function for lag:
+Simulated binary exposure: 
+
+```{r fig.align = "center", fig.width = 8, fig.height = 2.5}
+expo <- sim_exposure(n = 1000, central = .01, amp = .01,
+                     exposure_type = "binary")
+calendar_plot(expo, type = "discrete", labels = c("Not exposed", "Exposed"))
+```
+
+
+Simulated outcome (no seasonal or longterm trends): 
+
+```{r fig.align = "center", fig.width = 8, fig.height = 2.5}
+base <- create_baseline(1000, 58, trend="no trend")
+calendar_plot(base, type = "continuous")
+```
+
+
+We created a custom lambda function that allows you to simulate data under the condition that same-day exposure has a certain relative risk, but that there is also some (possibly different) delayed relative risk on days following the event. This package draws on functions in `dlnm` to simulate this data. The main inputs to this function are simulated exposure and baseline time series, as well as specifications of relative risk lagged following an exposure, and the output is a numeric vector with the expected number of outcomes (based on the baseline trends and exposure on that day and previous days) for each day over the time period. Here is the code:
 
 ```{r}
 source("../R/dlnmfuncs.R")
 stratalambda
 ```
-```{r}
+
+Here is an example of using this function to create simulated outcome data under the scenario that same-day exposure to a binary event has a relative risk of 1.20, exposure on days 1 to 2 after the event has a relative risk of 1.05, and exposure on days 3 to 6 after the event has a relative risk of 1.01:
+
+```{r fig.align = "center", fig.width = 8, fig.height = 2.5}
 strat <- stratalambda(exposure = expo$x, baseline = base$baseline,
                       rrvalues = c(.2, .05, .01), lag = 6,
                       argvar = list(fun = "lin"),
                       arglag = list(fun="strata", breaks = c(0,1,3)))
+calendar_plot(data_frame(expo$date, strat), type = "continuous")
 ```
 
-This returns a vector of lambda values.  
+This returns a vector of expected daily mortality on each day of the time series.  
 
-Using in sim_outcome:
+You can use this custom function in `sim_outcome` to simulate a timeseries of daily outcomes (e.g., daily mortality count):
 
 ```{r}
 out <- sim_outcome(exposure = expo, average_outcome = 58,
@@ -48,10 +69,14 @@ out <- sim_outcome(exposure = expo, average_outcome = 58,
                                            argvar = list(fun = "lin"),
                                            arglag = list(fun="strata",
                                                          breaks = c(0,4,9))))
-out[1:50,]
 plot(out$outcome)
 which(expo$x==1)
 ```
+
+```{r fig.align = "center", fig.width = 8, fig.height = 2.5}
+calendar_plot(out %>% select(date, outcome), type = "continuous")
+```
+
 
 # Continuous relative risks
 
