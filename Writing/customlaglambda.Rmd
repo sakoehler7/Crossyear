@@ -24,7 +24,7 @@ set.seed(8)
 Simulated binary exposure: 
 
 ```{r fig.align = "center", fig.width = 8, fig.height = 2.5}
-expo <- sim_exposure(n = 1000, central = .01, amp = .01,
+expo <- sim_exposure(n = 1000, central = .1, amp = .01,
                      exposure_type = "binary")
 calendar_plot(expo, type = "discrete", labels = c("Not exposed", "Exposed"))
 ```
@@ -49,9 +49,10 @@ Here is an example of using this function to create simulated outcome data under
 
 ```{r fig.align = "center", fig.width = 8, fig.height = 2.5}
 strat <- stratalambda(exposure = expo$x, baseline = base$baseline,
-                      rrvalues = c(.2, .05, .01), lag = 6,
+                      rrvalues = c(.5, .2, .05), lag = 2,
                       argvar = list(fun = "lin"),
-                      arglag = list(fun="strata", breaks = c(0,1,3)))
+                      arglag = list(fun="strata", breaks = c(0,1,2)))
+calendar_plot(expo, type = "discrete", labels = c("Not exposed", "Exposed"))
 calendar_plot(data_frame(expo$date, strat), type = "continuous")
 ```
 
