@@ -10,9 +10,9 @@
 stratalambda <- function(exposure, baseline, rrvalues, lag, argvar, arglag){
   basis <- crossbasis(exposure, lag=lag, argvar=argvar,arglag=arglag)
   basis <- as.data.frame(basis)
-  for (i in 2:ncol(basis)){
-    basis[,i] <- basis[,i]*rrvalues[i-1]
-  }
+  
+  basis <- basis[ , 2:ncol(basis)] * log(rrvalues)
+  
   rr <- apply(basis, MARGIN = 1, FUN = sum, na.rm = F)
   log_lambda <- rep(0, length(rr))
   for (i in 1:length(rr)){
