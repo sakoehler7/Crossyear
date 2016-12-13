@@ -8,6 +8,7 @@
 #' test[c(12,14,23)]<-1
 #' testbasis <- crossbasis(test, lag = 2, argvar = list(fun="lin"), 
 #'            arglag = list(fun="strata", breaks = c(0,1,2)))[,]
+#' rrmat <- matrix(log(c(1.2,1.1,1.05)), ncol=1)
 #' logrr <- testbasis[,2:ncol(testbasis)]%*%rrmat
 #' stratalambda(test, baseline = rep(58, 30), rrvalues = c(1.5,1.2,1.05), 
 #'              lag = 2, argvar = list(fun="lin"), 
