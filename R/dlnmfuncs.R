@@ -25,22 +25,9 @@ stratalambda <- function(exposure, baseline, rrvalues, lag, argvar, arglag){
   rrmat <- matrix(log(rrvalues), ncol = 1)
   #Matrix multiplication: results in nx1 vector of log(rr), adds overlapping log(rr):
   logrr <- basis[ , 2:ncol(basis)] %*% rrmat
-  #Create vector zeros:
-  log_lambda <- rep(0, length(logrr))
-  #Something in here is incorrect:
-  for (i in 1:length(logrr)){
-    if (is.na(logrr[i])==T){
-      log_lambda[i] <- log(baseline[i])
-    }
-    else if (logrr[i] != 0){
-      log_lambda[i] <- log(baseline[i]) + logrr[i]
-    }
-    else{
-      log_lambda[i] <- log(baseline[i])
-    }
-  }
+  log_lambda <- log(baseline)+logrr
   lambda <- exp(log_lambda)
-  return(lambda)
+  return(as.numeric(lambda))
 }
 
 #' 
@@ -102,8 +89,5 @@ smoothlambda <- function(exposure, baseline, lag, scale){
   lambda <- exp(log_lambda)
   return(lambda)
 }
-#' 
-#' 
-#' 
 #' 
 #' 
