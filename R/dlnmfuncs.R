@@ -6,25 +6,33 @@
 #' @examples 
 #' test <- rep(0, 30)
 #' test[c(12,14,23)]<-1
-#' crossbasis(test, lag = 2, argvar = list(fun="lin"), 
+#' testbasis <- crossbasis(test, lag = 2, argvar = list(fun="lin"), 
 #'            arglag = list(fun="strata", breaks = c(0,1,2)))[,]
+#' logrr <- testbasis[,2:ncol(testbasis)]%*%rrmat
+#' stratalambda(test, baseline = rep(58, 30), rrvalues = c(1.5,1.2,1.05), 
+#'              lag = 2, argvar = list(fun="lin"), 
+#'              arglag = list(fun="strata", breaks = c(0,1,2)))
 #' 
 #' @export
 #' 
 stratalambda <- function(exposure, baseline, rrvalues, lag, argvar, arglag){
+  #Make basis of ones where there is any relative risk
   basis <- crossbasis(exposure, lag=lag, argvar=argvar,arglag=arglag)
-  basis <- as.data.frame(basis)
-  
-  basis <- basis[ , 2:ncol(basis)] * log(rrvalues)
-  
-  rr <- apply(basis, MARGIN = 1, FUN = sum, na.rm = F)
-  log_lambda <- rep(0, length(rr))
-  for (i in 1:length(rr)){
-    if (is.na(rr[i])==T){
+  #Turn basis into matrix
+  basis <- as.matrix(basis)
+  #Take log of relative risk values, make rx1 matrix from them:
+  rrmat <- matrix(log(rrvalues), ncol = 1)
+  #Matrix multiplication: results in nx1 vector of log(rr), adds overlapping log(rr):
+  logrr <- basis[ , 2:ncol(basis)] %*% rrmat
+  #Create vector zeros:
+  log_lambda <- rep(0, length(logrr))
+  #Something in here is incorrect:
+  for (i in 1:length(logrr)){
+    if (is.na(logrr[i])==T){
       log_lambda[i] <- log(baseline[i])
     }
-    else if (rr[i] != 0){
-      log_lambda[i] <- log(baseline[i]) + log(rr[i])
+    else if (logrr[i] != 0){
+      log_lambda[i] <- log(baseline[i]) + logrr[i]
     }
     else{
       log_lambda[i] <- log(baseline[i])
@@ -53,7 +61,7 @@ stratalambda <- function(exposure, baseline, rrvalues, lag, argvar, arglag){
 smoothrr <- function(exposure, lag, scale=6){
   #scale of 6 results in max rr of 1.18, independent of other arguments.
   #Add lag amount of burn time at beginning of exposure
-  newexp <- c(rep(0, lag), exposure)
+  exposure <- c(rep(0, lag), exposure)
   #Create a vector that has a 1 on each day there was increased rr:
   lagtime <- dlnm::crossbasis(x=exposure, lag = lag, argvar = list(fun = "thr", 
                               thr.value = 0))[,]
