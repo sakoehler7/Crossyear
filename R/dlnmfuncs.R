@@ -3,7 +3,11 @@
 #' This is a custom lambda function to enter into eesim.  It creates lambda 
 #' values based on stratified relative risks.  
 #' 
-#' 
+#' @examples 
+#' test <- rep(0, 30)
+#' test[c(12,14,23)]<-1
+#' crossbasis(test, lag = 2, argvar = list(fun="lin"), 
+#'            arglag = list(fun="strata", breaks = c(0,1,2)))[,]
 #' 
 #' @export
 #' 
@@ -42,6 +46,7 @@ stratalambda <- function(exposure, baseline, rrvalues, lag, argvar, arglag){
 #' testrr <- smoothrr(testexpo$x, lag = 20, scale = 6)
 #' overlap <- rep(0,200)
 #' overlap[c(50, 60, 144)] <-1
+#' smoothrr(testexpo$x, lag = 20)
 #' 
 #' @export
 #' 
