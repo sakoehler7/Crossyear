@@ -5,7 +5,7 @@ date: "October 14, 2016"
 output: pdf_document
 ---
 
-```{r}
+```{r, message = F}
 library(dplyr)
 ```
 
@@ -38,7 +38,7 @@ calendar_plot(base, type = "continuous")
 ```
 
 
-We created a custom lambda function that allows you to simulate data under the condition that same-day exposure has a certain relative risk, but that there is also some (possibly different) delayed relative risk on days following the event. This package draws on functions in `dlnm` to simulate this data. The main inputs to this function are simulated exposure and baseline time series, as well as specifications of relative risk lagged following an exposure, and the output is a numeric vector with the expected number of outcomes (based on the baseline trends and exposure on that day and previous days) for each day over the time period. Here is the code:
+We created a custom lambda function that allows you to simulate data under the condition that same-day exposure has a certain relative risk, but that there is also some (possibly different) delayed relative risk on days following the event. This experiment draws on functions in `dlnm` to simulate this data. The main inputs to this function are simulated exposure and baseline outcome time series, as well as specifications of relative risk lagged following an exposure, and the output is a numeric vector with the expected number of outcomes (based on the baseline trends and exposure on that day and previous days) for each day over the time period. Here is the code:
 
 ```{r}
 source("../R/dlnmfuncs.R")
@@ -66,7 +66,7 @@ out <- sim_outcome(exposure = expo, average_outcome = 58,
                    trend = "no trend", cust_lambda_func = stratalambda,
                    cust_lambda_args = list(exposure = expo$x,
                                            baseline = base,
-                                           rrvalues = c(.7, .5, .3),
+                                           rrvalues = c(1.7, 1.5, 1.3),
                                            lag=15,
                                            argvar = list(fun = "lin"),
                                            arglag = list(fun="strata",
