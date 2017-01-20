@@ -17,6 +17,7 @@ Making some binary exposure values and a baseline:
 ```{r, message=F}
 #Simulated binary exposure values from eesim
 library(dlnm)
+library(ggplot2)
 library(eesim)
 set.seed(8)
 ```
@@ -30,7 +31,7 @@ calendar_plot(expo, type = "discrete", labels = c("Not exposed", "Exposed"))
 ```
 
 
-Simulated outcome (no seasonal or longterm trends): 
+Baseline outcome (no seasonal or longterm trends, all values 58): 
 
 ```{r fig.align = "center", fig.width = 8, fig.height = 2.5}
 base <- create_baseline(1000, 58, trend="no trend")
@@ -38,14 +39,16 @@ calendar_plot(base, type = "continuous")
 ```
 
 
-We created a custom lambda function that allows you to simulate data under the condition that same-day exposure has a certain relative risk, but that there is also some (possibly different) delayed relative risk on days following the event. This experiment draws on functions in `dlnm` to simulate this data. The main inputs to this function are simulated exposure and baseline outcome time series, as well as specifications of relative risk lagged following an exposure, and the output is a numeric vector with the expected number of outcomes (based on the baseline trends and exposure on that day and previous days) for each day over the time period. Here is the code:
+We created a custom lambda function that allows you to simulate data under the condition that same-day exposure has a certain relative risk, but that there is also some (possibly different) delayed relative risk on days following the event. This experiment draws on functions in `dlnm` to simulate this data. The main inputs to this function are simulated exposure and baseline outcome time series, as well as specifications of relative risk lagged following an exposure, and the output is a numeric vector with the expected number of outcomes (based on the baseline trends and exposure on that day and previous days) for each day over the time period.
+
+Below is the code for the situation where we have stratified, not continuous, relative risk values.  In the following example we have set relative risks of 1.5 on day 0, 1.2 on day 1, and 1.05 on day 2.  Lag=2 specifies that we have two days of exposure after the initial exposure day, and breaks=c(0,1,2) means that the 0, 1st, and 2nd days after the initial exposure each have a unique relative risk value.  
+
+The calendar plot for exposure is reprinted here for ease of comparison.
 
 ```{r}
 source("../R/dlnmfuncs.R")
 stratalambda
 ```
-
-Here is an example of using this function to create simulated outcome data under the scenario that same-day exposure to a binary event has a relative risk of 1.20, exposure on days 1 to 2 after the event has a relative risk of 1.05, and exposure on days 3 to 6 after the event has a relative risk of 1.01:
 
 ```{r fig.align = "center", fig.width = 8, fig.height = 2.5}
 strat <- stratalambda(exposure = expo$x, baseline = base$baseline,
@@ -59,7 +62,44 @@ calendar_plot(data_frame(expo$date, strat), type = "continuous")
 
 This returns a vector of expected daily mortality on each day of the time series.  
 
-You can use this custom function in `sim_outcome` to simulate a timeseries of daily outcomes (e.g., daily mortality count):
+Let's look at Feb. 7 to ensure overlapped relative risks are working properly.  Feb. 6th and 7th are both initial exposure days, so the outcome on Feb. 7th should be 1.5 * 1.2 * 58 = 104.4.  This looks correct on the calendar plot above.  There is no randomization yet with just using the stratalambda function. 
+
+#An Example with longer lag times
+
+First, I'll use the stratalambda function alone to get expected outcome values:
+
+```{r}
+longstrat <- stratalambda(exposure = expo$x, baseline = base$baseline,
+                      rrvalues = c(1.7, 1.5, 1.3), lag = 15,
+                      argvar = list(fun = "lin"),
+                      arglag = list(fun="strata", breaks = c(0,4,9)))
+calendar_plot(data_frame(expo$date, longstrat), type = "continuous")
+longstrat[which.max(longstrat)]
+```
+
+Let's examine Feb. 10th this time.  The exposures that affect Feb. 10th are on Jan. 26 and Feb. 2, 6, 7, and 10.  Here I will compute the expected outcome for Feb. 10th based on these relative risks:
+
+```{r}
+Date <- c("Jan. 26", "Jan. 27", "Jan. 28", "Jan. 29", "Jan. 30", "Jan. 31", "Feb. 1", "Feb. 2", "Feb. 3", "Feb. 4", "Feb. 5", "Feb. 6", "Feb. 7", "Feb. 8", "Feb. 9", "Feb. 10")
+Day <- 0:15
+RR26 <- c(1.7, 1.7, 1.7, 1.7, 1.5, 1.5, 1.5, 1.5, 1.5, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3)
+RR2 <- c(0,0,0,0,0,0,0,1.7, 1.7, 1.7, 1.7, 1.5, 1.5, 1.5, 1.5, 1.5)
+RR6 <- c(rep(0, 11), 1.7, 1.7, 1.7, 1.7, 1.5)
+RR7 <- c(rep(0, 12), rep(1.7, 4))
+RR10 <- c(rep(0, 15), 1.7)
+calc <- data.frame(Date, Day, RR26, RR2, RR6, RR7, RR10)
+calc
+```
+
+The expected outcome should be the relative risks in th last line of the data frame multiplied together with 58: 
+
+```{r}
+1.3 * 1.5 * 1.5 * 1.7 * 1.7 * 58
+```
+
+SUCCESS!
+
+You can use this custom function in `sim_outcome` to simulate a timeseries of daily outcomes (e.g., daily mortality count), which adds randomization:
 
 ```{r}
 out <- sim_outcome(exposure = expo, average_outcome = 58,
@@ -74,6 +114,8 @@ out <- sim_outcome(exposure = expo, average_outcome = 58,
 plot(out$outcome)
 which(expo$x==1)
 ```
+
+\textcolor{red}{First issue: Why does this calendar plot look different than the others? Why is Jan 1 in a different spot?} 
 
 ```{r fig.align = "center", fig.width = 8, fig.height = 2.5}
 calendar_plot(out %>% select(date, outcome), type = "continuous")
