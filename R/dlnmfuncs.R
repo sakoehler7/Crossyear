@@ -42,7 +42,7 @@ stratalambda <- function(exposure, baseline, rrvalues, lag, argvar, arglag){
 #' testrr <- smoothrr(testexpo$x, lag = 20, scale = 6)
 #' overlap <- rep(0,200)
 #' overlap[c(50, 60, 144)] <-1
-#' smoothrr(testexpo$x, lag = 20)
+#' smoothrr(exposure = testexpo$x, lag = 20)
 #' 
 #' @export
 #' 
@@ -67,7 +67,7 @@ smoothrr <- function(exposure, lag, scale=6){
 }
 polylag <- dlnm:::poly(rrseq)/scale
 rr <- exp(polylag)
-return(lagtime)
+return(rr)
 }
 
 #' 

@@ -133,12 +133,57 @@ set.seed(15)
 testexpo <- sim_exposure(n=200, central = .01, amp = .01,
                          exposure_type = "binary")
 testrr <- smoothrr(testexpo$x, lag = 20, scale = 6)
-plot(testrr)
+```
+
+##Step-by-step breakdown of smoothrr function
+
+First let's look at an example with no overlap in lags.
+
+```{r}
+#Setting values for the arguments
+exposure = testexpo$x
+lag = 20
+scale = 6
+
+#First step of function: Add lag amount of burn time at beginning of exposure
+(exposure <- c(rep(0, lag), exposure))
+
+#Create a vector that has a 1 on each day there was increased rr:
+(lagtime <- dlnm::crossbasis(x=exposure, lag = lag, argvar = list(fun = "thr", 
+                              thr.value = 0))[,])
+
+#Replace 1's in previous vector with sequence of integers counting backward from lag value
+rrseq <- rep(0, length(lagtime))
+  for (i in 1:length(lagtime)){
+    if(is.na(lagtime[i])){
+      rrseq[i] <- 0
+    }
+  else if (lagtime[i]==1 & (lagtime[i-1]==0 | is.na(lagtime[i-1]))){
+    rrseq[i:(i+lag-1)] = abs(-lag:-1)
+  }
+  else if (lagtime[i]==0){
+    rrseq[i]<-0
+  }
+  }
+rrseq
+
+#Replaces sequences in previous vector with linear rr values. The scale parameter is simply to adjust these values to get the max rr we want when we exponentiate - a scale value of 6 results in a max rr of 1.18, regardless of what the other arguments are.
+polylag <- dlnm:::poly(rrseq)/scale
+print(as.vector(polylag))
+plot(polylag)
+
+#Exponentiate previous vector to get nonlinear and continuous rr values.  I won't display the values here, only a plot.
+rr <- exp(polylag)
+plot(rr)
 ```
 
 Here is a plot of what the relative risks look like over time.  They look linear here, but they're not actually linear because I'm using an exponential function, I'm pretty sure.
 
 For this function to work, we need there to be no exposures in the first lag number of days, and we may need each exposure to be at least lag number of days apart.  
+
+\textcolor{red}{Our issue is that we need the function to work when there is lag overlap, but it is not constructed in such a way.  I think the main issue is in the rrseq step.  I'm stuck on a way to construct the function so that lag overlap will be additive.}  
+
+#Use smoothrr in eesim
 
 Now here's an example of using this function in eesim. The scale parameter adjusts what the initial relative risk is.  A scale of 6 will set the relative risk on day zero to be around 1.2.
 
