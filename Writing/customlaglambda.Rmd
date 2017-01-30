@@ -206,4 +206,57 @@ plot(out$outcome)
 which(testexpo$x==1)
 ```
 
-This is an extreme case because the relative risk on day zero is around 1.65 (because the scale is set at 2).  I wanted to show the pattern though, which is evident in this plot.  
+This is an extreme case because the relative risk on day zero is around 1.65 (because the scale is set at 2).  I wanted to show the pattern though, which is evident in this plot. 
+
+#Second attempt at smoothrr: Linear rr
+
+In this attempt, I'm basing the code off of stratalambda.
+
+Create some exposure values. First, I'll use binary exposure with no overlap.
+
+```{r}
+exp <- rep(0,30)
+exp[c(6,18)] <- 1
+exp
+```
+
+Now create a basis. Perhaps "integer" is the function we want in the arglag list.
+
+```{r}
+lag=5
+testbasis <- crossbasis(exp, lag = 5, argvar = list(fun="lin"), 
+             arglag = list(fun="integer"))[,]
+testbasis
+```
+
+This basis could be good, but we'd need to turn those 1s into rr values somehow. 
+Here's one way to do it: Sequence rr from 0 to 1 by increments of 1/lag. Reverse that sequence and multiply it by the max relative risk, which is the relative risk for the initial exposure day.
+ 
+
+```{r}
+rrmat <- as.matrix(rev(1.2*seq(0,1,by=1/(lag))))
+rrmat
+```
+
+Now multiply testbasis and rrmat to get the relative risks:
+
+```{r}
+rrvals <- testbasis%*%rrmat
+plot(rrvals)
+```
+
+Let's check if this method works when there is lag in the overlap.
+
+```{r}
+exp <- rep(0,30)
+exp[c(14, 17, 24)] <- 1
+lag=5
+testbasis <- crossbasis(exp, lag = 5, argvar = list(fun="lin"), 
+             arglag = list(fun="integer"))[,]
+testbasis
+rrvals <- testbasis %*% rrmat
+```
+
+Based on the "testbasis" matrix, the 17th day should have an initial relative risk plus a 4th-day relative risk value: 1.2+.48 = 1.68, and that is indeed the 17th value of the rrvals. 
+
+Overlap works for this linear case.  
