@@ -230,11 +230,12 @@ testbasis
 ```
 
 This basis could be good, but we'd need to turn those 1s into rr values somehow. 
-Here's one way to do it: Sequence rr from 0 to 1 by increments of 1/lag. Reverse that sequence and multiply it by the max relative risk, which is the relative risk for the initial exposure day.
- 
+Here's one way to do it: Sequence rr from 0 to 1 by increments of 1/lag. Reverse that sequence, multiply it by some scaling factor, and exponentiate (If we want an exponential shape to our rr). Here I've divided the sequence by 6 to have a max rr of 1.18.
 
+This is the step at which we could specify what kind of pattern we want the continuous rr to have, i.e. linear, exponential, etc.
+ 
 ```{r}
-rrmat <- as.matrix(rev(1.2*seq(0,1,by=1/(lag))))
+rrmat <- as.matrix(rev(exp(seq(0,1,by=1/(lag))/6)))
 rrmat
 ```
 
@@ -251,12 +252,36 @@ Let's check if this method works when there is lag in the overlap.
 exp <- rep(0,30)
 exp[c(14, 17, 24)] <- 1
 lag=5
-testbasis <- crossbasis(exp, lag = 5, argvar = list(fun="lin"), 
+testbasis2 <- crossbasis(exp, lag = 5, argvar = list(fun="lin"), 
              arglag = list(fun="integer"))[,]
-testbasis
-rrvals <- testbasis %*% rrmat
+testbasis2
+rrvals <- testbasis2 %*% rrmat
+plot(rrvals)
 ```
 
-Based on the "testbasis" matrix, the 17th day should have an initial relative risk plus a 4th-day relative risk value: 1.2+.48 = 1.68, and that is indeed the 17th value of the rrvals. 
+Based on the "testbasis" matrix, the 17th day should have an initial relative risk plus a 4th-day (lag 3) relative risk value: 1.1814+1.0689 = 2.2503, and that is indeed the 17th value of the rrvals. 
 
-Overlap works for this linear case.  
+Overlap works for this case.  
+
+Note: We want the 0s in the "rrvals" to be 1s, since that is the "baseline" relative risk when there is no exposure. 
+
+##Wrap this into a function
+
+Take the above process and make it a function which outputs relative risk values. The below only does an exponential curve for the rr values, but perhaps that's something we could make adjustable.  I've also added lag number of burn-in values for the exposure.
+
+```{r}
+smoothrr2 <- function(exposure, lag, scale){
+  exp <- c(rep(0,lag),exposure)
+  basis <- crossbasis(x=exp, lag = lag, argvar = list(fun="lin"), 
+             arglag = list(fun="integer"))[,]
+  rrmat <- as.matrix(rev(exp(seq(0,1,by=1/(lag))/scale)))
+  rrvals <- basis %*% rrmat
+  return(rrvals)
+}
+```
+
+Let's test this function out using the overlapped exposure from above:
+
+```{r}
+smoothrr2(exp, lag=4, scale = 6)
+```
