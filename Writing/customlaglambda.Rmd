@@ -226,6 +226,8 @@ Now create a basis. Perhaps "integer" is the function we want in the arglag list
 lag=5
 testbasis <- crossbasis(exp, lag = 5, argvar = list(fun="lin"), 
              arglag = list(fun="integer"))[,]
+#With "lin" in arglag, beta0=first column, beta1=second column
+#Try splines for nonlinear rr
 testbasis
 ```
 
@@ -284,4 +286,34 @@ Let's test this function out using the overlapped exposure from above:
 
 ```{r}
 smoothrr2(exp, lag=4, scale = 6)
+```
+
+##Using "lin" option in dlnm
+
+First try with non-overlapped exposure:
+
+```{r}
+lag=5
+exp <- rep(0, 30)
+exp[c(7,17)] <- 1
+testbasis <- crossbasis(exp, lag = 5, argvar = list(fun="lin"), 
+             arglag = list(fun="lin"))[,]
+testbasis
+```
+
+Now specifying slope = -.03 and intercept = 1.2:
+
+```{r}
+rrmat <- as.matrix(c(1.2, -.03), nrow = 2, byrow = T)
+rrmat
+rrvals <- testbasis%*%rrmat
+plot(rrvals)
+```
+
+This works well.  The only consideration is that when wrapping it into a function, we'd want base rr to be 1, and any days without additional rr to be 1.
+
+##Using "poly" option in dlnm
+
+```{r}
+
 ```
