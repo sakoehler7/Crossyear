@@ -345,7 +345,7 @@ exp[c(11,28)] <- 1
 testbasis <- crossbasis(exp, lag = 10, argvar = list(fun="lin"), 
              arglag = list(fun="ns", knots = 3, intercept = T))[,]
 testbasis
-rrmat <- as.matrix(c(1.2,1,1), nrow = 4, byrow = T)
+rrmat <- as.matrix(c(0.0001130639, 0.0011044975, -0.0075406861), nrow = 4, byrow = T)
 rrmat
 rrvals <- testbasis%*%rrmat
 rrvals[1:lag,] <-0
@@ -354,3 +354,18 @@ catplot(xs = 1:50, ys=rrvals, cat=3, size = .075, catcolor = c(1,0,1,1))
 ```
 
 This seems like it will work but idk how to make it the shape we want. The knots= argument specifies the values of lag at which we want knots.  These are cubic splines.  
+
+##Getting the right shape with Chicago data:
+
+This is the example from the DLNM vignette.  I used the first three coefficients displayed below in the preceding example and it gives a nice rr shape, which is pretty cool.  
+
+```{r}
+cb1.pm <- crossbasis(chicagoNMMAPS$pm10, lag=15, argvar=list(fun="lin"),
+arglag=list(fun="poly",degree=4))
+cb1.temp <- crossbasis(chicagoNMMAPS$temp, lag=3, argvar=list(df=5),
+arglag=list(fun="strata",breaks=1))
+library(splines)
+model1 <- glm(death ~ cb1.pm + cb1.temp + ns(time, 7*14) + dow, family=quasipoisson(), chicagoNMMAPS)
+pred1.pm <- crosspred(cb1.pm, model1, at=0:20, bylag=0.2, cumul=TRUE)
+pred1.pm$coefficients 
+```
