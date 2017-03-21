@@ -357,7 +357,7 @@ This seems like it will work but idk how to make it the shape we want. The knots
 
 ##Getting the right shape with Chicago data:
 
-This is the example from the DLNM vignette.  I used the first three coefficients displayed below in the preceding example and it gives a nice rr shape, which is pretty cool.  
+This is the example from the DLNM vignette.  I used the first three coefficients displayed below in the preceding example and it gives a nice rr shape, which is downright magical. 
 
 ```{r}
 cb1.pm <- crossbasis(chicagoNMMAPS$pm10, lag=15, argvar=list(fun="lin"),
