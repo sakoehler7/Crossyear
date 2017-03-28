@@ -369,3 +369,37 @@ model1 <- glm(death ~ cb1.pm + cb1.temp + ns(time, 7*14) + dow, family=quasipois
 pred1.pm <- crosspred(cb1.pm, model1, at=0:20, bylag=0.2, cumul=TRUE)
 pred1.pm$coefficients 
 ```
+
+##Plot Library
+
+Here are a number of different shapes we could use for relative risk.
+
+```{r}
+lag=10
+exp <- rep(0, 50)
+exp[c(11,28)] <- 1
+testbasis <- crossbasis(exp, lag = 10, argvar = list(fun="lin"), 
+             arglag = list(fun="ns", knots = 3, intercept = T))[,]
+
+#Plot 1
+rrmat <- as.matrix(4*c(0.0001130639, 0.0011044975, -0.0075406861), nrow = 4, byrow = T)
+rrmat
+rrvals <- testbasis%*%rrmat
+rrvals[1:lag,] <-0
+plot(rrvals)
+
+#Plot 2: Adjust to have min 1 and max 1.1ish
+
+testbasis2 <- crossbasis(exp, lag = 10, argvar = list(fun="lin"), 
+             arglag = list(fun="ns", knots = 1, intercept = T))[,]
+rrmat <- as.matrix(20*c(0.0001130639,  0.0011044975, -0.0075406861), nrow = 3, byrow = T)
+rrmat
+rrvals <- testbasis2%*%rrmat
+rrvals[1:lag,] <-0
+#The next 4 lines make the min rr=1 and the shape correct
+rrvals[rrvals==0] <- min(rrvals)
+if (min(rrvals)<0){
+  rrvals2 <- rrvals + abs(min(rrvals)) + 1
+}
+plot(rrvals2, main="knots=1, coefs=20*(.000113, .0011, -.00754)")
+```
