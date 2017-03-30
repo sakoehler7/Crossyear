@@ -388,11 +388,14 @@ rrvals <- testbasis%*%rrmat
 rrvals[1:lag,] <-0
 plot(rrvals)
 
-#Plot 2: Adjust to have min 1 and max 1.1ish
+#Plot 2: long lag
 
-testbasis2 <- crossbasis(exp, lag = 10, argvar = list(fun="lin"), 
+lag<- 30
+exp2 <- rep(0, 100)
+exp2[c(36, 68)] <- 1
+testbasis2 <- crossbasis(exp2, lag = 30, argvar = list(fun="lin"), 
              arglag = list(fun="ns", knots = 1, intercept = T))[,]
-rrmat <- as.matrix(20*c(0.0001130639,  0.0011044975, -0.0075406861), nrow = 3, byrow = T)
+rrmat <- as.matrix(15*c(0.0001130639,  0.0011044975, -0.0075406861), nrow = 3, byrow = T)
 rrmat
 rrvals <- testbasis2%*%rrmat
 rrvals[1:lag,] <-0
@@ -401,5 +404,15 @@ rrvals[rrvals==0] <- min(rrvals)
 if (min(rrvals)<0){
   rrvals2 <- rrvals + abs(min(rrvals)) + 1
 }
-plot(rrvals2, main="knots=1, coefs=20*(.000113, .0011, -.00754)")
+plot(rrvals2, main="knots=1, coefs=10*(.000113, .0011, -.00754)")
+```
+
+##Use strata to get dip shape
+
+```{r}
+#make the mean of some data with dip
+strat <- stratalambda(exp2, baseline= rep(58, 100), rrvalues = c(1.2, 1.12, 1.04, 1.02, 1.01, 1, .99, .9925, .9975, 1), lag=10, argvar=list(fun="lin"), arglag=list(fun="strata", breaks = c(0,1,2,3,4,5,6,7,8,9)))
+plot(strat)
+
+#run through dlnm
 ```
